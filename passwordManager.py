@@ -47,7 +47,7 @@ class PasswordManager:
             file.write(cipher.iv + encrypt_data)
     
     # List password & list them as most recent = smallest num & least recent = biggest num
-    def list_password(self):
+    def list_passwords(self):
         if not self.vault():
             print("No password created.")
             return
@@ -55,6 +55,17 @@ class PasswordManager:
         print("Stored Passwords:")
         for i, name in enumerate(sorted_passwords, 1):
             print(f"{i}. {name}")
+
+    # Get password (show password)
+    def get_password(self):
+        self.list_passwords()
+        try:
+            index = int(input('Enter the number of the password to view: '))
+            sorted_passwords = sorted(self.vault.keys(), key=lambda x: -len(x))
+            selected_name = sorted_passwords[index - 1]
+            print(f"Password for '{selected_name}': {self.vault[selected_name]}")
+        except (ValueError, IndexError):
+            print("Invalid selection, try again.")
 
     # Create password for entry (entry = the data saved)
     def create_password(self):
@@ -79,7 +90,7 @@ class PasswordManager:
 
     # Delete password
     def delete_password(self):
-        self.list_password()
+        self.list_passwords()
         name_to_delete = input("Enter the name of the password to delete: ")
         if name_to_delete in self.vault:
             confirm = input(f"Are you sure you want to delete '{name_to_delete}'? (y/n): ")
@@ -91,3 +102,37 @@ class PasswordManager:
                 print("Deletion aborted.")
         else:
             print(f"No password found with the name '{name_to_delete}'.")
+    
+    # Main 
+    def main(self):
+        while True:
+            print("\n AES_PASSWORD_ENCRYPTION_PROGRAM")
+            print("\nPassword Manager Options:")
+            print("1. List passwords")
+            print("2. Create password")
+            print("3. Delete password")
+            print("4. Retrieve password")
+            print("5. Exit")
+            choice = input("Choose an option: ")
+
+            if choice == '1':
+                self.list_passwords()
+            elif choice == '2':
+                self.create_password()
+            elif choice == '3':
+                self.delete_password()
+            elif choice == '4':
+                self.get_password()
+            elif choice == '5':
+                print("Exiting Password Manager.")
+                break
+            else:
+                print("Invalid option, try again.")
+
+if __name__ == "__main__":
+    try:
+        vault_name = input("Enter your vault name: ")
+        manager = PasswordManager(vault_name)
+        manager.run()
+    except KeyboardInterrupt:
+        print("\n\nProgram was cancelled")
