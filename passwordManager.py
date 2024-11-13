@@ -17,15 +17,15 @@ class PasswordManager:
         if os.path.exists(self.key_file):
             with open(self.key_file, "rb") as file:
                 return file.read()
-        
         else:
             key = get_random_bytes(32)
             with open(self.key_file, "wb") as file:
-                return file.write(key)
+                file.write(key)
+            return key
     
     # Load encrypted* vault data
     def load_vault(self):
-        if os.path.exists(self.key_file):
+        if os.path.exists(self.vault_file):
             with open(self.vault_file, "rb") as file:
                 encrypted_content = file.read()
             # Create cipher + iv
@@ -48,7 +48,7 @@ class PasswordManager:
     
     # List password & list them as most recent = smallest num & least recent = biggest num
     def list_passwords(self):
-        if not self.vault():
+        if not self.vault:
             print("No password created.")
             return
         sorted_passwords = sorted(self.vault.keys(), key=lambda x: -len(x))
@@ -106,12 +106,11 @@ class PasswordManager:
     # Main 
     def main(self):
         while True:
-            print("\n AES_PASSWORD_ENCRYPTION_PROGRAM")
             print("\nPassword Manager Options:")
             print("1. List passwords")
             print("2. Create password")
             print("3. Delete password")
-            print("4. Retrieve password")
+            print("4. View password")
             print("5. Exit")
             choice = input("Choose an option: ")
 
@@ -129,10 +128,30 @@ class PasswordManager:
             else:
                 print("Invalid option, try again.")
 
+# check if vault already exists
+def initialize_vault():
+    existing_vault = input("Do you already have a vault? (yes/no): ").strip().lower()
+    if existing_vault == 'yes':
+        vault_name = input("Enter your existing vault name: ").strip()
+        if not os.path.exists(f"{vault_name}.txt"):
+            print(f"No vault found with the name '{vault_name}'.")
+            return initialize_vault()
+        else:
+            print(f"Vault '{vault_name}' loaded.")
+    else:
+        vault_name = input("Enter a name for your new vault: ").strip()
+        if os.path.exists(f"{vault_name}.txt"):
+            print(f"A vault named '{vault_name}' already exists. Try another name.")
+            return initialize_vault()
+        else:
+            print(f"Vault '{vault_name}' created.")
+    
+    return vault_name
+
 if __name__ == "__main__":
     try:
-        vault_name = input("Enter your vault name: ")
+        vault_name = initialize_vault()
         manager = PasswordManager(vault_name)
-        manager.run()
+        manager.main()
     except KeyboardInterrupt:
         print("\n\nProgram was cancelled")
