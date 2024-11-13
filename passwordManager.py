@@ -5,6 +5,8 @@ from Crypto.Util.Padding import pad, unpad
 import json
 from colorama import Fore, init
 from getpass import getpass
+import string
+import random
 
 # Initialize colorama
 init(autoreset=True)
@@ -69,22 +71,37 @@ class PasswordManager:
             selected_name = sorted_passwords[index - 1]
             print(f"{Fore.BLUE}Password for '{selected_name}': {self.vault[selected_name]}{Fore.RESET}")
         except (ValueError, IndexError):
-            print("{Fore.RED}Invalid selection, try again.{Fore.RESET}")
+            print(f"{Fore.RED}Invalid selection, try again.{Fore.RESET}")
 
     # Create password entry
     def create_password(self):
-        name = input("Enter password name: ")
-        # Verify if name exists
-        while name in self.vault:
-            print("Name {Fore.RED}already in use{Fore.RESET}, enter another one.")
+        print("Password creator options:")
+        print("1. Choose own password")
+        print("2. Generate password")
+        create_or_generate = input("Choose an option (1/2): ")
+        if create_or_generate == "1":
             name = input("Enter password name: ")
-        
-        password = getpass("Enter password: ")
-        confirm_password = getpass("Retype password: ")
-        while password != confirm_password:
-            print("Passwords {Fore.RED}do not match{Fore.RESET}, try again.")
+            # Verify if name exists
+            while name in self.vault:
+                print(f"Name {Fore.RED}already in use{Fore.RESET}, enter another one.")
+                name = input("Enter password name: ")
+            
             password = getpass("Enter password: ")
             confirm_password = getpass("Retype password: ")
+            while password != confirm_password:
+                print(f"Passwords {Fore.RED}do not match{Fore.RESET}, try again.")
+                password = getpass("Enter password: ")
+                confirm_password = getpass("Retype password: ")
+        elif create_or_generate == "2":
+            name = input("Enter password name: ")
+            # Generate password
+            all_characters = string.ascii_letters + string.digits + string.punctuation
+            length = int(input("Enter the length of the password: "))
+            password = ''.join(random.choices(all_characters, k=length))
+            print("Generated password:", password)
+        else: 
+            print(f"{Fore.RED}Invalid selection, try again.{Fore.RESET}")
+
         
         # Save in vault
         self.vault[name] = password
