@@ -3,6 +3,10 @@ from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 import json
+from colorama import Fore, init
+
+# Initialize colorama
+init(autoreset=True)
 
 class PasswordManager:
     def __init__(self, vault_path, key_path):
@@ -48,7 +52,7 @@ class PasswordManager:
     # List passwords with most recent entry first
     def list_passwords(self):
         if not self.vault:
-            print("No passwords created.")
+            print("No passwords found.")
             return
         sorted_passwords = sorted(self.vault.keys(), key=lambda x: -len(x))
         print("Stored Passwords:")
@@ -62,40 +66,40 @@ class PasswordManager:
             index = int(input("Enter the number of the password to view: "))
             sorted_passwords = sorted(self.vault.keys(), key=lambda x: -len(x))
             selected_name = sorted_passwords[index - 1]
-            print(f"Password for '{selected_name}': {self.vault[selected_name]}")
+            print(f"{Fore.BLUE}Password for '{selected_name}': {self.vault[selected_name]}{Fore.RESET}")
         except (ValueError, IndexError):
-            print("Invalid selection, try again.")
+            print("{Fore.RED}Invalid selection, try again.{Fore.RESET}")
 
     # Create password entry
     def create_password(self):
         name = input("Enter password name: ")
         # Verify if name exists
         while name in self.vault:
-            print("Name already in use, enter another one.")
+            print("Name {Fore.RED}already in use{Fore.RESET}, enter another one.")
             name = input("Enter password name: ")
         
         password = input("Enter password: ")
         confirm_password = input("Retype password: ")
         while password != confirm_password:
-            print("Passwords do not match, try again.")
+            print("Passwords {Fore.RED}do not match{Fore.RESET}, try again.")
             password = input("Enter password: ")
             confirm_password = input("Retype password: ")
         
         # Save in vault
         self.vault[name] = password
         self.save_vault()
-        print(f"Password for '{name}' created successfully.")
+        print(f"Password for '{name}' {Fore.GREEN}created{Fore.RESET} successfully.")
 
     # Delete password
     def delete_password(self):
         self.list_passwords()
         name_to_delete = input("Enter the name of the password to delete: ")
         if name_to_delete in self.vault:
-            confirm = input(f"Are you sure you want to delete '{name_to_delete}'? (y/n): ")
+            confirm = input(f"Are you sure you want to {Fore.RED}delete{Fore.RESET} '{name_to_delete}'? (y/n): ")
             if confirm.lower() == 'y':
                 del self.vault[name_to_delete]
                 self.save_vault()
-                print(f"Password for '{name_to_delete}' deleted successfully.")
+                print(f"Password for '{name_to_delete}' {Fore.RED}deleted{Fore.RESET} successfully.")
             else:
                 print("Deletion aborted.")
         else:
@@ -105,11 +109,11 @@ class PasswordManager:
     def main(self):
         while True:
             print("\nPassword Manager Options:")
-            print("1. List passwords")
-            print("2. Create password")
-            print("3. Delete password")
-            print("4. Retrieve password")
-            print("5. Exit")
+            print(f"1. {Fore.MAGENTA}List passwords{Fore.RESET}")
+            print(f"2. {Fore.GREEN}Create password{Fore.RESET}")
+            print(f"3. {Fore.YELLOW}Delete password{Fore.RESET}")
+            print(f"4. {Fore.BLUE}Retrieve password{Fore.RESET}")
+            print(f"5. {Fore.RED}Exit{Fore.RESET}")
             choice = input("Choose an option: ")
 
             if choice == '1':
@@ -128,17 +132,18 @@ class PasswordManager:
 
 # Initialize the vault by getting paths
 def initialize_vault():
+    print(f"{Fore.BLUE}AES{Fore.RESET} Password Manager")
     existing_vault = input("Do you already have a vault? (yes/no): ").strip().lower()
     if existing_vault == 'yes':
         vault_path = input("Enter your existing vault file path: ").strip()
         key_path = input("Enter your key file path: ").strip()
         if not os.path.exists(vault_path):
-            print(f"No vault found at '{vault_path}'.")
+            print(f"No vault found at {Fore.RED}'{vault_path}'{Fore.RESET}.")
             return initialize_vault()
         if not os.path.exists(key_path):
-            print(f"No key file found at '{key_path}'.")
+            print(f"No key file found at {Fore.RED}'{key_path}'{Fore.RESET}.")
             return initialize_vault()
-        print(f"Vault at '{vault_path}' loaded.")
+        print(f"Vault at '{vault_path}' {Fore.GREEN}loaded{Fore.RESET}.")
     else:
         # Prompt the user for info
         vault_name = input("Enter your vault name: ").strip()
