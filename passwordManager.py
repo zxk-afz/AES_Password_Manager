@@ -45,3 +45,27 @@ class PasswordManager:
         encrypt_data = cipher.encrypt(pad(data.encode(), AES.block_size))
         with open(self.vault_file, "wb") as file:
             file.write(cipher.iv + encrypt_data)
+    
+    # Create password for entry (entry = the data saved)
+    def create_password(self):
+        name = input("Enter password name: ")
+        # Verify if exist
+        while name in self.vault:
+            print("Name is already in use, enter another one: ")
+            name = input("Enter password name: ")
+        
+        password = input("Enter password: ")
+        confirm_password = input("Retype password: ")
+        # Don't match
+        while password != confirm_password:
+            print("Password does not match, try again.")
+            password = input("Enter password: ")
+            confirm_password = input("Retype password: ")
+        
+        # Save in vault
+        self.vault[name] = password
+        self.save_vault()
+        print(f"Password for '{name}' created successfully.")
+
+    # Delete password
+    
