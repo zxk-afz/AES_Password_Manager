@@ -4,6 +4,7 @@ from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
 import json
 from colorama import Fore, init
+from getpass import getpass
 
 # Initialize colorama
 init(autoreset=True)
@@ -78,12 +79,12 @@ class PasswordManager:
             print("Name {Fore.RED}already in use{Fore.RESET}, enter another one.")
             name = input("Enter password name: ")
         
-        password = input("Enter password: ")
-        confirm_password = input("Retype password: ")
+        password = getpass("Enter password: ")
+        confirm_password = getpass("Retype password: ")
         while password != confirm_password:
             print("Passwords {Fore.RED}do not match{Fore.RESET}, try again.")
-            password = input("Enter password: ")
-            confirm_password = input("Retype password: ")
+            password = getpass("Enter password: ")
+            confirm_password = getpass("Retype password: ")
         
         # Save in vault
         self.vault[name] = password
