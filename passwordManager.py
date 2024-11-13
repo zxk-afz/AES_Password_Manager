@@ -46,6 +46,16 @@ class PasswordManager:
         with open(self.vault_file, "wb") as file:
             file.write(cipher.iv + encrypt_data)
     
+    # List password & list them as most recent = smallest num & least recent = biggest num
+    def list_password(self):
+        if not self.vault():
+            print("No password created.")
+            return
+        sorted_passwords = sorted(self.vault.keys(), key=lambda x: -len(x))
+        print("Stored Passwords:")
+        for i, name in enumerate(sorted_passwords, 1):
+            print(f"{i}. {name}")
+
     # Create password for entry (entry = the data saved)
     def create_password(self):
         name = input("Enter password name: ")
@@ -68,4 +78,4 @@ class PasswordManager:
         print(f"Password for '{name}' created successfully.")
 
     # Delete password
-    
+        
