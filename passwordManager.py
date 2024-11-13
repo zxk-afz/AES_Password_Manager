@@ -113,10 +113,10 @@ class PasswordManager:
             print(f"1. {Fore.MAGENTA}List passwords{Fore.RESET}")
             print(f"2. {Fore.GREEN}Create password{Fore.RESET}")
             print(f"3. {Fore.YELLOW}Delete password{Fore.RESET}")
-            print(f"4. {Fore.BLUE}Retrieve password{Fore.RESET}")
+            print(f"4. {Fore.BLUE}View password{Fore.RESET}")
             print(f"5. {Fore.RED}Exit{Fore.RESET}")
             choice = input("Choose an option: ")
-
+            
             if choice == '1':
                 self.list_passwords()
             elif choice == '2':
