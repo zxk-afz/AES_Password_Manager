@@ -78,4 +78,16 @@ class PasswordManager:
         print(f"Password for '{name}' created successfully.")
 
     # Delete password
-        
+    def delete_password(self):
+        self.list_password()
+        name_to_delete = input("Enter the name of the password to delete: ")
+        if name_to_delete in self.vault:
+            confirm = input(f"Are you sure you want to delete '{name_to_delete}'? (y/n): ")
+            if confirm.lower() == 'y':
+                del self.vault[name_to_delete]
+                self.save_vault()
+                print(f"Password for '{name_to_delete}' deleted successfully.")
+            else:
+                print("Deletion aborted.")
+        else:
+            print(f"No password found with the name '{name_to_delete}'.")
