@@ -75,7 +75,7 @@ class PasswordManager:
 
     # Create password entry
     def create_password(self):
-        print("Password creator options:")
+        print("Password options:")
         print("1. Choose own password")
         print("2. Generate password")
         create_or_generate = input("Choose an option (1/2): ")
