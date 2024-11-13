@@ -69,7 +69,7 @@ class PasswordManager:
             index = int(input("Enter the number of the password to view: "))
             sorted_passwords = sorted(self.vault.keys(), key=lambda x: -len(x))
             selected_name = sorted_passwords[index - 1]
-            print(f"{Fore.BLUE}Password for '{selected_name}': {self.vault[selected_name]}{Fore.RESET}")
+            print(f"Password for '{selected_name}': {Fore.BLUE}{self.vault[selected_name]}{Fore.RESET}")
         except (ValueError, IndexError):
             print(f"{Fore.RED}Invalid selection, try again.{Fore.RESET}")
 
@@ -98,7 +98,7 @@ class PasswordManager:
             all_characters = string.ascii_letters + string.digits + string.punctuation
             length = int(input("Enter the length of the password: "))
             password = ''.join(random.choices(all_characters, k=length))
-            print("Generated password:", password)
+            print(f"Generated password: {Fore.BLUE}{password}{Fore.RESET}")
         else: 
             print(f"{Fore.RED}Invalid selection, try again.{Fore.RESET}")
 
