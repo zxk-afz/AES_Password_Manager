@@ -31,11 +31,7 @@ python password_manager.py
 ### 2. Password Manager Options:
 ```bash
 1. List passwords
-2. Create pass1. List passwords
 2. Create password
-3. Delete password
-4. Retrieve password
-5. Exitword
 3. Delete password
 4. Retrieve password
 5. Exit
