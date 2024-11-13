@@ -7,7 +7,7 @@ import json
 class PasswordManager:
     def __init__(self, vault_name):
         self.vault_name = vault_name
-        self.vault_file = f"{vault_name}.vault"
+        self.vault_file = f"{vault_name}.txt"
         self.key_file = f"key-{vault_name}.bin"
         self.key = self.load_key()
         self.load_vault()
