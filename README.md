@@ -1,6 +1,6 @@
 # AES Password Manager
 
-
+```bash
   /$$$$$$  /$$$$$$$$  /$$$$$$                                                     
  /$$__  $$| $$_____/ /$$__  $$                                                    
 | $$  \ $$| $$      | $$  \__/                                                    
@@ -34,7 +34,7 @@
                                              /$$  \ $$                            
                                             |  $$$$$$/                            
                                              \______/                             
-
+```
 
 A terminal-based password manager that securely stores and manages passwords in an AES-encrypted vault. The vault is protected using AES-256 encryption.
 
