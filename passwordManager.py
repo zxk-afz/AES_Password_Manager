@@ -27,6 +27,8 @@ class PasswordManager:
         # Make the key using the password and salt
         key = PBKDF2(self.password, self.salt, dkLen=32, count=1000000, hmac_hash_module=SHA256)
         return key
+    
+    # Verify key (check if it makes sense)
     def verify_key(self, encrypted_data, iv):
         try:
             cipher = AES.new(self.key, AES.MODE_CBC, iv=iv)
