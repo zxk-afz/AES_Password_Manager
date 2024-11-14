@@ -1,15 +1,15 @@
 import os
 import time
-from Crypto.Random import get_random_bytes
-from Crypto.Cipher import AES
-from Crypto.Util.Padding import pad, unpad
-from Crypto.Protocol.KDF import PBKDF2
-from Crypto.Hash import SHA256
 import json
 from colorama import Fore, init
 from getpass import getpass
 import string
 import random
+from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Hash import SHA256
 
 # Initialize colorama
 init(autoreset=True)
@@ -22,7 +22,7 @@ class PasswordManager:
         self.load_vault()
 
     def transform_password(self):
-        if self.salt is None:  # Create salt if it doesn't exist
+        if self.salt is None:  # Create salt if doesn't exist
             self.salt = get_random_bytes(16)
         # Make the key using the password and salt
         key = PBKDF2(self.password, self.salt, dkLen=32, count=1000000, hmac_hash_module=SHA256)
