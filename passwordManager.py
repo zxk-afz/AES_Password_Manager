@@ -86,7 +86,9 @@ class PasswordManager:
             index = int(input("Enter the number of the password to view: "))
             sorted_passwords = sorted(self.vault.keys(), key=lambda x: -len(x))
             selected_name = sorted_passwords[index - 1]
-            print(f"Password for '{selected_name}': {Fore.BLUE}{self.vault[selected_name]}{Fore.RESET}")
+            print(f"{selected_name}:")
+            print(f"Username: {self.vault[selected_name]['username']}")
+            print(f"Password: {Fore.BLUE}{self.vault[selected_name]['password']}{Fore.RESET}")
         except (ValueError, IndexError):
             print(f"{Fore.RED}Invalid selection, try again.{Fore.RESET}")
 
@@ -101,6 +103,7 @@ class PasswordManager:
             while name in self.vault:
                 print(f"Name {Fore.RED}already in use{Fore.RESET}, enter another one.")
                 name = input("Enter password name: ")
+                username = input("Enter username (optional): ")
             password = getpass("Enter password: ")
             confirm_password = getpass("Retype password: ")
             while password != confirm_password:
@@ -109,6 +112,7 @@ class PasswordManager:
                 confirm_password = getpass("Retype password: ")
         elif create_or_generate == "2":
             name = input("Enter password name: ")
+            username = input("Enter username (optional): ")
             all_characters = string.ascii_letters + string.digits + string.punctuation
             length = int(input("Enter the length of the password: "))
             password = ''.join(random.choices(all_characters, k=length))
@@ -116,7 +120,10 @@ class PasswordManager:
         else: 
             print(f"{Fore.RED}Invalid selection, try again.{Fore.RESET}")
         
-        self.vault[name] = password
+        self.vault[name] = {
+            "username": username,
+            "password": password
+        }
         self.save_vault()
         print(f"Password for '{name}' {Fore.GREEN}created{Fore.RESET} successfully.")
 
