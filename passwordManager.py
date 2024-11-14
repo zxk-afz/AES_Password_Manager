@@ -18,43 +18,52 @@ class PasswordManager:
     def __init__(self, vault_path, password):
         self.vault_path = vault_path
         self.password = password
-        self.key = self.transform_password()
+        self.salt = None  # Salt will be loaded from the file or created if vault is new
         self.load_vault()
 
-    # Transform password to key
     def transform_password(self):
-        salt = get_random_bytes(16)  # Generate salt
-        key = PBKDF2(self.password, salt, dkLen=32, count=1000000, hmac_hash_module=SHA256)
+        if self.salt is None:  # Create salt if it doesn't exist
+            self.salt = get_random_bytes(16)
+        # Derive the key using the password and salt
+        key = PBKDF2(self.password, self.salt, dkLen=32, count=1000000, hmac_hash_module=SHA256)
         return key
-
-    # Verify if the entered key
     def verify_key(self, encrypted_data, iv):
         try:
-            cipher = AES.new(self.key, AES.MODE_CBC, iv)
-            decrypted_data = unpad(cipher.decrypt(encrypted_data), AES.block_size)
-            json.loads(decrypted_data.decode('utf-8'))
+            cipher = AES.new(self.key, AES.MODE_CBC, iv=iv)
+            unpad(cipher.decrypt(encrypted_data), AES.block_size)  # Decrypt and attempt unpadding
             return True
-        except (ValueError, KeyError, json.JSONDecodeError):
+        except (ValueError, KeyError):
             return False
+        
 
-    # Load encrypted vault data
     def load_vault(self):
         if os.path.exists(self.vault_path):
             with open(self.vault_path, "rb") as file:
                 encrypted_content = file.read()
-            cipher = AES.new(self.key, AES.MODE_CBC, iv=encrypted_content[:16])
-            decrypted_content = unpad(cipher.decrypt(encrypted_content[16:]), AES.block_size)
+            
+            # Extract salt and iv
+            self.salt = encrypted_content[:16]
+            iv = encrypted_content[16:32]
+            encrypted_data = encrypted_content[32:]
+
+            # Generate the key using the salt
+            self.key = self.transform_password()
+
+            cipher = AES.new(self.key, AES.MODE_CBC, iv=iv)
+            decrypted_content = unpad(cipher.decrypt(encrypted_data), AES.block_size)
             self.vault = json.loads(decrypted_content.decode())
         else:
+            self.key = self.transform_password()  # Generate key for new vault
             self.vault = {}
 
-    # Encrypt & save data into vault
     def save_vault(self):
         data = json.dumps(self.vault)
         cipher = AES.new(self.key, AES.MODE_CBC)
         encrypted_data = cipher.encrypt(pad(data.encode(), AES.block_size))
+        
         with open(self.vault_path, "wb") as file:
-            file.write(cipher.iv + encrypted_data)
+            # Write salt, iv, and encrypted data to the file
+            file.write(self.salt + cipher.iv + encrypted_data)
 
     # List passwords with most recent entry first
     def list_passwords(self):
@@ -184,7 +193,7 @@ def initialize_vault():
             print(f"A vault already exists at '{vault_path}'. Try another name or path.")
             return initialize_vault()
         
-        password = input("Enter a password for your new vault: ")
+        password = getpass("Enter a password for your new vault: ")
         print(f"Vault '{vault_path}' created.")
     
     return vault_path, password
