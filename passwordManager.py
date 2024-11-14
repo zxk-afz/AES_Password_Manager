@@ -1,7 +1,10 @@
 import os
+import time
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import AES
 from Crypto.Util.Padding import pad, unpad
+from Crypto.Protocol.KDF import PBKDF2
+from Crypto.Hash import SHA256
 import json
 from colorama import Fore, init
 from getpass import getpass
@@ -12,46 +15,47 @@ import random
 init(autoreset=True)
 
 class PasswordManager:
-    def __init__(self, vault_path, key_path):
+    def __init__(self, vault_path, password):
         self.vault_path = vault_path
-        self.key_path = key_path
-        self.key = self.load_key()
+        self.password = password
+        self.key = self.transform_password()
         self.load_vault()
-    
-    # Load or generate AES encryption key
-    def load_key(self):
-        if os.path.exists(self.key_path):
-            with open(self.key_path, "rb") as file:
-                return file.read()
-        else:
-            key = get_random_bytes(32)
-            with open(self.key_path, "wb") as file:
-                file.write(key)
-            return key
-    
+
+    # Transform password to key
+    def transform_password(self):
+        salt = get_random_bytes(16)  # Generate salt
+        key = PBKDF2(self.password, salt, dkLen=32, count=1000000, hmac_hash_module=SHA256)
+        return key
+
+    # Verify if the entered key
+    def verify_key(self, encrypted_data, iv):
+        try:
+            cipher = AES.new(self.key, AES.MODE_CBC, iv)
+            decrypted_data = unpad(cipher.decrypt(encrypted_data), AES.block_size)
+            json.loads(decrypted_data.decode('utf-8'))
+            return True
+        except (ValueError, KeyError, json.JSONDecodeError):
+            return False
+
     # Load encrypted vault data
     def load_vault(self):
         if os.path.exists(self.vault_path):
             with open(self.vault_path, "rb") as file:
                 encrypted_content = file.read()
-            # Create cipher + iv
             cipher = AES.new(self.key, AES.MODE_CBC, iv=encrypted_content[:16])
-            # Decrypt and remove padding
             decrypted_content = unpad(cipher.decrypt(encrypted_content[16:]), AES.block_size)
-            # Set vault as decrypted data
             self.vault = json.loads(decrypted_content.decode())
         else:
             self.vault = {}
-    
+
     # Encrypt & save data into vault
     def save_vault(self):
         data = json.dumps(self.vault)
         cipher = AES.new(self.key, AES.MODE_CBC)
-        # Encrypt data & add padding
         encrypted_data = cipher.encrypt(pad(data.encode(), AES.block_size))
         with open(self.vault_path, "wb") as file:
             file.write(cipher.iv + encrypted_data)
-    
+
     # List passwords with most recent entry first
     def list_passwords(self):
         if not self.vault:
@@ -81,11 +85,9 @@ class PasswordManager:
         create_or_generate = input("Choose an option (1/2): ")
         if create_or_generate == "1":
             name = input("Enter password name: ")
-            # Verify if name exists
             while name in self.vault:
                 print(f"Name {Fore.RED}already in use{Fore.RESET}, enter another one.")
                 name = input("Enter password name: ")
-            
             password = getpass("Enter password: ")
             confirm_password = getpass("Retype password: ")
             while password != confirm_password:
@@ -94,16 +96,13 @@ class PasswordManager:
                 confirm_password = getpass("Retype password: ")
         elif create_or_generate == "2":
             name = input("Enter password name: ")
-            # Generate password
             all_characters = string.ascii_letters + string.digits + string.punctuation
             length = int(input("Enter the length of the password: "))
             password = ''.join(random.choices(all_characters, k=length))
             print(f"Generated password: {Fore.BLUE}{password}{Fore.RESET}")
         else: 
             print(f"{Fore.RED}Invalid selection, try again.{Fore.RESET}")
-
         
-        # Save in vault
         self.vault[name] = password
         self.save_vault()
         print(f"Password for '{name}' {Fore.GREEN}created{Fore.RESET} successfully.")
@@ -122,7 +121,7 @@ class PasswordManager:
                 print("Deletion aborted.")
         else:
             print(f"No password found with the name '{name_to_delete}'.")
-    
+
     # Main loop
     def main(self):
         while True:
@@ -133,7 +132,6 @@ class PasswordManager:
             print(f"4. {Fore.BLUE}View password{Fore.RESET}")
             print(f"5. {Fore.RED}Exit{Fore.RESET}")
             choice = input("Choose an option: ")
-            
             if choice == '1':
                 self.list_passwords()
             elif choice == '2':
@@ -148,39 +146,53 @@ class PasswordManager:
             else:
                 print("Invalid option, try again.")
 
-# Initialize the vault by getting paths
+# Vault initialization function
 def initialize_vault():
     print(f"{Fore.BLUE}AES{Fore.RESET} Password Manager")
     existing_vault = input("Do you already have a vault? (yes/no): ").strip().lower()
+    
     if existing_vault == 'yes':
         vault_path = input("Enter your existing vault file path: ").strip()
-        key_path = input("Enter your key file path: ").strip()
+        
         if not os.path.exists(vault_path):
             print(f"No vault found at {Fore.RED}'{vault_path}'{Fore.RESET}.")
             return initialize_vault()
-        if not os.path.exists(key_path):
-            print(f"No key file found at {Fore.RED}'{key_path}'{Fore.RESET}.")
-            return initialize_vault()
-        print(f"Vault at '{vault_path}' {Fore.GREEN}loaded{Fore.RESET}.")
+        
+        while True:
+            password = getpass("Enter the vault password: ")
+            if password == '':
+                print(f"{Fore.RED}Please enter a valid password.{Fore.RESET}")
+                continue
+            
+            manager = PasswordManager(vault_path, password)
+            
+            with open(vault_path, "rb") as file:
+                encrypted_content = file.read()
+            
+            if manager.verify_key(encrypted_content[16:], encrypted_content[:16]):
+                print(f"{Fore.GREEN}Access granted.{Fore.RESET}")
+                return vault_path, password
+            else:
+                print(f"{Fore.RED}Incorrect password, please try again in 3 seconds.{Fore.RESET}")
+                time.sleep(3)
     else:
-        # Prompt the user for info
         vault_name = input("Enter your vault name: ").strip()
         vault_name = vault_name.replace(" ", "-")
         vault_path = f"{vault_name}.vault" 
-        key_path = f"key-{vault_name}.bin" 
         
         if os.path.exists(vault_path):
             print(f"A vault already exists at '{vault_path}'. Try another name or path.")
             return initialize_vault()
         
+        password = input("Enter a password for your new vault: ")
         print(f"Vault '{vault_path}' created.")
     
-    return vault_path, key_path
+    return vault_path, password
 
 if __name__ == "__main__":
     try:
-        vault_path, key_path = initialize_vault()
-        manager = PasswordManager(vault_path, key_path)
+        vault_path, password = initialize_vault()
+        manager = PasswordManager(vault_path, password)
         manager.main()
     except KeyboardInterrupt:
         print("\n\nProgram was cancelled.")
