@@ -24,7 +24,7 @@ class PasswordManager:
     def transform_password(self):
         if self.salt is None:  # Create salt if it doesn't exist
             self.salt = get_random_bytes(16)
-        # Derive the key using the password and salt
+        # Make the key using the password and salt
         key = PBKDF2(self.password, self.salt, dkLen=32, count=1000000, hmac_hash_module=SHA256)
         return key
     def verify_key(self, encrypted_data, iv):
