@@ -41,17 +41,22 @@ class PasswordManager:
             with open(self.vault_path, "rb") as file:
                 encrypted_content = file.read()
             
-            # Extract salt and iv
+            # Salt and iv
             self.salt = encrypted_content[:16]
             iv = encrypted_content[16:32]
             encrypted_data = encrypted_content[32:]
 
-            # Generate the key using the salt
+            # Generate key with salt
             self.key = self.transform_password()
 
-            cipher = AES.new(self.key, AES.MODE_CBC, iv=iv)
-            decrypted_content = unpad(cipher.decrypt(encrypted_data), AES.block_size)
-            self.vault = json.loads(decrypted_content.decode())
+            # Decrypt & check
+            try:
+                cipher = AES.new(self.key, AES.MODE_CBC, iv=iv)
+                decrypted_content = unpad(cipher.decrypt(encrypted_data), AES.block_size)
+                self.vault = json.loads(decrypted_content.decode())
+            except (ValueError, KeyError):
+                print(f"{Fore.RED}Incorrect password or corrupted vault file.{Fore.RESET}")
+                self.vault = None  # Mark the vault as not opeanable(if its a word)
         else:
             self.key = self.transform_password()  # Generate key for new vault
             self.vault = {}
@@ -62,7 +67,6 @@ class PasswordManager:
         encrypted_data = cipher.encrypt(pad(data.encode(), AES.block_size))
         
         with open(self.vault_path, "wb") as file:
-            # Write salt, iv, and encrypted data to the file
             file.write(self.salt + cipher.iv + encrypted_data)
 
     # List passwords with most recent entry first
@@ -182,7 +186,7 @@ def initialize_vault():
                 print(f"{Fore.GREEN}Access granted.{Fore.RESET}")
                 return vault_path, password
             else:
-                print(f"{Fore.RED}Incorrect password, please try again in 3 seconds.{Fore.RESET}")
+                print(f"{Fore.RED}Please try again in 3 seconds.{Fore.RESET}")
                 time.sleep(3)
     else:
         vault_name = input("Enter your vault name: ").strip()
